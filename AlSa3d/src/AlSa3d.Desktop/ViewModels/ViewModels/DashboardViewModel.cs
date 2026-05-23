@@ -70,7 +70,7 @@ namespace AlSa3d.Desktop.ViewModels
                 if (invoices.Success)
                     RecentInvoices = new ObservableCollection<InvoiceDto>(invoices.Data);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }

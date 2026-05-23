@@ -22,5 +22,4 @@ public class AuditLog : BaseEntity
     public DateTime ActionDate { get; set; } = DateTime.Now;
     public DateTime? Timestamp { get; set; }
     public string? IpAddress { get; set; }
-    public string? IPAddress { get; set; }
 }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using AlSa3d.Core.Entities;
 using AlSa3d.Core.Interfaces;
 using AlSa3d.Services.Interfaces;
 using AlSa3d.Services.Implementations;
@@ -41,7 +42,7 @@ namespace AlSa3d.Desktop;
             .ConfigureServices((context, services) =>
             {
                 services.AddDbContext<AppDbContext>(options =>
-                    options.UseSqlServer(context.Configuration.GetConnectionString("DefaultConnection")));
+                    options.UseSqlite(context.Configuration.GetConnectionString("DefaultConnection")));
 
                 services.AddScoped<IInvoiceService, InvoiceService>();
                 services.AddScoped<ICustomerService, CustomerService>();
@@ -76,6 +77,12 @@ namespace AlSa3d.Desktop;
     protected override async void OnStartup(StartupEventArgs e)
     {
         await _host.StartAsync();
+
+        using (var scope = _host.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.EnsureCreated();
+        }
 
         var mainWindow = _host.Services.GetRequiredService<MainWindow>();
         mainWindow.Show();
