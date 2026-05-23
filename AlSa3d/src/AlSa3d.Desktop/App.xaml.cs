@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,7 @@ using AlSa3d.Infrastructure.Data.Repositories;
 using AlSa3d.Desktop.ViewModels;
 using AlSa3d.Desktop.Views;
 using AlSa3d.Desktop.Services;
+using BCrypt.Net;
 
 namespace AlSa3d.Desktop;
 
@@ -84,6 +86,45 @@ namespace AlSa3d.Desktop;
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             db.Database.EnsureCreated();
+
+            if (!db.Set<User>().Any())
+            {
+                var adminRole = new Role
+                {
+                    Name = "مدير النظام",
+                    Description = "صلاحية كاملة للنظام",
+                    IsSystemRole = true,
+                    CreatedAt = DateTime.Now
+                };
+                db.Set<Role>().Add(adminRole);
+                db.SaveChanges();
+
+                var adminUser = new User
+                {
+                    Username = "admin",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123", workFactor: 12),
+                    FullName = "مدير النظام",
+                    Email = "admin@alsa3d.com",
+                    RoleId = adminRole.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.Now
+                };
+                db.Set<User>().Add(adminUser);
+                db.SaveChanges();
+
+                var defaultCurrency = new Currency
+                {
+                    Code = "EGP",
+                    Name = "جنيه مصري",
+                    Symbol = "ج.م",
+                    ExchangeRate = 1,
+                    IsBase = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.Now
+                };
+                db.Set<Currency>().Add(defaultCurrency);
+                db.SaveChanges();
+            }
         }
 
         var mainWindow = _host.Services.GetRequiredService<MainWindow>();
