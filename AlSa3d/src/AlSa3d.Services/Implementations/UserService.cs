@@ -1,3 +1,5 @@
+using AlSa3d.Core;
+using AlSa3d.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,7 +54,7 @@ namespace AlSa3d.Services.Implementations
                 // تسجيل العملية
                 await LogAuditAsync(user.Id, "Login", $"تسجيل دخول ناجح من {username}");
 
-                return Result.Success(user);
+                return Result.Ok(user);
             }
             catch (Exception ex)
             {
@@ -110,14 +112,14 @@ namespace AlSa3d.Services.Implementations
                 user.PasswordHash = HashPassword(newPassword);
                 user.UpdatedAt = DateTime.Now;
 
-                var result = await _userRepository.UpdateAsync(user);
+                var updateResult = await _userRepository.UpdateAsync(user);
                 
-                if (result.Success)
+                if (updateResult.Success)
                 {
                     await LogAuditAsync(userId, "ChangePassword", "تغيير كلمة المرور");
                 }
 
-                return result;
+                return Result.Ok(updateResult.Success);
             }
             catch (Exception ex)
             {
@@ -130,7 +132,7 @@ namespace AlSa3d.Services.Implementations
             try
             {
                 var users = await _userRepository.GetAllAsync(u => u.Role);
-                return Result.Success(users.Where(u => !u.IsDeleted).OrderBy(u => u.Username));
+                return Result.Ok(users.Where(u => !u.IsDeleted).OrderBy((u => u.Username)).AsEnumerable());
             }
             catch (Exception ex)
             {
@@ -146,7 +148,7 @@ namespace AlSa3d.Services.Implementations
                 if (user == null || user.IsDeleted)
                     return Result.Failure<User>("المستخدم غير موجود");
 
-                return Result.Success(user);
+                return Result.Ok(user);
             }
             catch (Exception ex)
             {
@@ -195,14 +197,14 @@ namespace AlSa3d.Services.Implementations
                 user.IsDeleted = true;
                 user.DeletedAt = DateTime.Now;
 
-                var result = await _userRepository.UpdateAsync(user);
+                var updateResult = await _userRepository.UpdateAsync(user);
                 
-                if (result.Success)
+                if (updateResult.Success)
                 {
                     await LogAuditAsync(id, "DeleteUser", $"حذف المستخدم: {user.Username}");
                 }
 
-                return result;
+                return Result.Ok(updateResult.Success);
             }
             catch (Exception ex)
             {
@@ -235,7 +237,7 @@ namespace AlSa3d.Services.Implementations
             try
             {
                 var roles = await _roleRepository.GetAllAsync();
-                return Result.Success(roles.Where(r => !r.IsDeleted).OrderBy(r => r.Name));
+                return Result.Ok(roles.Where(r => !r.IsDeleted).OrderBy((r => r.Name)).AsEnumerable());
             }
             catch (Exception ex)
             {
@@ -262,8 +264,8 @@ namespace AlSa3d.Services.Implementations
                     }
                 }
 
-                var result = await _roleRepository.UpdateAsync(role);
-                return result;
+                var updateResult = await _roleRepository.UpdateAsync(role);
+                return Result.Ok(updateResult.Success);
             }
             catch (Exception ex)
             {
@@ -277,12 +279,12 @@ namespace AlSa3d.Services.Implementations
             {
                 var user = await _userRepository.GetByIdAsync(userId, u => u.Role);
                 if (user == null || user.IsDeleted || user.Role == null)
-                    return Result.Failure<bool>(false);
+                    return Result.Ok(false);
 
                 var hasPermission = user.Role.Permissions != null && 
                     user.Role.Permissions.Any(p => p.Name == permissionName && !p.IsDeleted);
 
-                return Result.Success(hasPermission);
+                return Result.Ok(hasPermission);
             }
             catch (Exception ex)
             {

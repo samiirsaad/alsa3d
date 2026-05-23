@@ -4,8 +4,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using AlSa3d.Core.Interfaces;
-using AlSa3d.Core.Services;
+using AlSa3d.Services.Interfaces;
+using AlSa3d.Services.Implementations;
 using AlSa3d.Infrastructure.Data;
 using AlSa3d.Desktop.ViewModels;
 using AlSa3d.Desktop.Views;
@@ -13,12 +15,11 @@ using AlSa3d.Desktop.Services;
 
 namespace AlSa3d.Desktop;
 
-/// <summary>
-/// نقطة الانطلاق الرئيسية للتطبيق
-/// </summary>
-public partial class App : Application
+    public partial class App : Application
 {
     private readonly IHost _host;
+
+    public static IServiceProvider ServiceProvider => Current is App app ? app._host.Services : null!;
 
     public App()
     {
@@ -35,15 +36,12 @@ public partial class App : Application
                 logging.ClearProviders();
                 logging.AddConsole();
                 logging.AddDebug();
-                logging.AddFile(o => o.PathPattern = "Logs/app-{Date}.log");
             })
             .ConfigureServices((context, services) =>
             {
-                // تسجيل DbContext
                 services.AddDbContext<AppDbContext>(options =>
                     options.UseSqlServer(context.Configuration.GetConnectionString("DefaultConnection")));
 
-                // تسجيل الخدمات (Services)
                 services.AddScoped<IInvoiceService, InvoiceService>();
                 services.AddScoped<ICustomerService, CustomerService>();
                 services.AddScoped<IEmployeeService, EmployeeService>();
@@ -51,7 +49,6 @@ public partial class App : Application
                 services.AddScoped<IProductService, ProductService>();
                 services.AddScoped<IUserService, UserService>();
 
-                // تسجيل ViewModels
                 services.AddTransient<LoginViewModel>();
                 services.AddTransient<DashboardViewModel>();
                 services.AddTransient<CustomerViewModel>();
@@ -63,12 +60,10 @@ public partial class App : Application
                 services.AddTransient<SettingsViewModel>();
                 services.AddTransient<MainViewModel>();
 
-                // تسجيل خدمات المساعدة
                 services.AddSingleton<INavigationService, NavigationService>();
                 services.AddSingleton<IDialogService, DialogService>();
                 services.AddSingleton<INotificationService, NotificationService>();
 
-                // تسجيل النافذة الرئيسية
                 services.AddSingleton<MainWindow>();
             })
             .Build();

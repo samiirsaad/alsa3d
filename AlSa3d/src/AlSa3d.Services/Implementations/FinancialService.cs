@@ -1,3 +1,5 @@
+using AlSa3d.Core;
+using AlSa3d.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +40,7 @@ namespace AlSa3d.Services.Implementations
             try
             {
                 var banks = await _bankRepository.GetAllAsync(b => b.Accounts);
-                return Result.Success(banks.Where(b => !b.IsDeleted).OrderBy(b => b.Name));
+                return Result.Ok(banks.Where(b => !b.IsDeleted).OrderBy((b => b.Name)).AsEnumerable());
             }
             catch (Exception ex)
             {
@@ -109,7 +111,7 @@ namespace AlSa3d.Services.Implementations
                     DueDate = dto.DueDate,
                     PayeeName = dto.PayeeName,
                     Notes = dto.Notes,
-                    Status = CheckStatus.Pending,
+                    Status = "Pending",
                     CreatedAt = DateTime.Now
                 };
 
@@ -130,7 +132,7 @@ namespace AlSa3d.Services.Implementations
                 if (check == null)
                     return Result.Failure<Check>("الشيك غير موجود");
 
-                check.Status = CheckStatus.Deposited;
+                check.Status = "Deposited";
                 check.DepositedAt = DateTime.Now;
                 check.DepositedAccountId = accountId;
 
@@ -138,7 +140,7 @@ namespace AlSa3d.Services.Implementations
                 var transaction = new Transaction
                 {
                     AccountId = accountId,
-                    Type = TransactionType.Credit,
+                    Type = "Credit",
                     Amount = check.Amount,
                     CurrencyId = check.CurrencyId,
                     Description = $"إيداع شيك رقم {check.CheckNumber}",
@@ -165,7 +167,7 @@ namespace AlSa3d.Services.Implementations
                 if (check == null)
                     return Result.Failure<Check>("الشيك غير موجود");
 
-                check.Status = CheckStatus.Bounced;
+                check.Status = "Bounced";
                 check.BouncedAt = DateTime.Now;
                 check.BounceReason = reason;
 
@@ -199,7 +201,7 @@ namespace AlSa3d.Services.Implementations
                 if (account == null)
                     return Result.Failure<Transaction>("الحساب غير موجود");
 
-                if (dto.Type == TransactionType.Credit)
+                if (dto.Type == "Credit")
                     account.Balance += dto.Amount;
                 else
                     account.Balance -= dto.Amount;
@@ -226,7 +228,7 @@ namespace AlSa3d.Services.Implementations
                 if (toDate.HasValue)
                     transactions = transactions.Where(t => t.Date <= toDate.Value.Date);
 
-                return Result.Success(transactions.OrderByDescending(t => t.Date));
+                return Result.Ok(transactions.OrderByDescending(t => t.Date).AsEnumerable());
             }
             catch (Exception ex)
             {
@@ -273,7 +275,7 @@ namespace AlSa3d.Services.Implementations
             try
             {
                 if (fromCurrencyId == toCurrencyId)
-                    return Result.Success(amount);
+                    return Result.Ok(amount);
 
                 var rate = await _exchangeRateRepository.GetAsync(e => 
                     e.FromCurrencyId == fromCurrencyId && 
@@ -282,7 +284,7 @@ namespace AlSa3d.Services.Implementations
                 if (rate == null)
                     return Result.Failure<decimal>("سعر الصرف غير متوفر");
 
-                return Result.Success(amount * rate.Rate);
+                return Result.Ok(amount * rate.Rate);
             }
             catch (Exception ex)
             {

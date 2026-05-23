@@ -1,3 +1,5 @@
+using AlSa3d.Core;
+using AlSa3d.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +40,7 @@ namespace AlSa3d.Services.Implementations
                     p => p.Category,
                     p => p.WarehouseProducts);
                 
-                return Result.Success(products.Where(p => !p.IsDeleted).OrderBy(p => p.Name));
+                return Result.Ok(products.Where(p => !p.IsDeleted).OrderBy((p => p.Name)).AsEnumerable());
             }
             catch (Exception ex)
             {
@@ -57,7 +59,7 @@ namespace AlSa3d.Services.Implementations
                 if (product == null || product.IsDeleted)
                     return Result.Failure<Product>("المنتج غير موجود");
 
-                return Result.Success(product);
+                return Result.Ok(product);
             }
             catch (Exception ex)
             {
@@ -108,7 +110,7 @@ namespace AlSa3d.Services.Implementations
                     await _warehouseProductRepository.AddAsync(warehouseProduct);
                 }
 
-                return Result.Success(product);
+                return Result.Ok(product);
             }
             catch (Exception ex)
             {
@@ -157,8 +159,8 @@ namespace AlSa3d.Services.Implementations
                 product.IsDeleted = true;
                 product.DeletedAt = DateTime.Now;
 
-                var result = await _productRepository.UpdateAsync(product);
-                return result;
+                var updateResult = await _productRepository.UpdateAsync(product);
+                return Result.Ok(updateResult.Success);
             }
             catch (Exception ex)
             {
@@ -218,7 +220,7 @@ namespace AlSa3d.Services.Implementations
                 var warehouseProduct = await _warehouseProductRepository.GetAsync(wp => 
                     wp.ProductId == productId && wp.WarehouseId == warehouseId);
 
-                return Result.Success(warehouseProduct?.Quantity ?? 0);
+                return Result.Ok((int)(warehouseProduct?.Quantity ?? 0));
             }
             catch (Exception ex)
             {
@@ -253,8 +255,8 @@ namespace AlSa3d.Services.Implementations
 
                 warehouseProduct.LastUpdated = DateTime.Now;
 
-                var result = await _warehouseProductRepository.UpdateAsync(warehouseProduct);
-                return result;
+                var updateResult = await _warehouseProductRepository.UpdateAsync(warehouseProduct);
+                return Result.Ok(updateResult.Success);
             }
             catch (Exception ex)
             {
@@ -270,9 +272,9 @@ namespace AlSa3d.Services.Implementations
                 
                 var lowStock = products.Where(p => !p.IsDeleted && 
                     p.WarehouseProducts != null &&
-                    p.WarehouseProducts.Sum(wp => wp.Quantity) <= (p.MinStockLevel ?? threshold));
+                    p.WarehouseProducts.Sum(wp => wp.Quantity) <= threshold);
 
-                return Result.Success(lowStock);
+                return Result.Ok(lowStock);
             }
             catch (Exception ex)
             {

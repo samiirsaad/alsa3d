@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace AlSa3d.Desktop.Services;
 
@@ -46,7 +47,7 @@ public class NotificationService : INotificationService
         // إنشاء عنصر الإشعار
         var border = new Border
         {
-            Background = (BrushConverter.ConvertFromString(colorHex) as Brush) ?? Brushes.White,
+            Background = (new BrushConverter().ConvertFromString(colorHex) as Brush) ?? Brushes.White,
             CornerRadius = new CornerRadius(8),
             Padding = new Thickness(15),
             Margin = new Thickness(5),

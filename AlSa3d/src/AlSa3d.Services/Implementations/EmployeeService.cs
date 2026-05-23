@@ -1,3 +1,5 @@
+using AlSa3d.Core;
+using AlSa3d.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +34,7 @@ namespace AlSa3d.Services.Implementations
             try
             {
                 var employees = await _employeeRepository.GetAllAsync(e => e.Department);
-                return Result.Success(employees.Where(e => !e.IsDeleted).OrderBy(e => e.Name));
+                return Result.Ok(employees.Where(e => !e.IsDeleted).OrderBy((e => e.Name)).AsEnumerable());
             }
             catch (Exception ex)
             {
@@ -48,7 +50,7 @@ namespace AlSa3d.Services.Implementations
                 if (employee == null || employee.IsDeleted)
                     return Result.Failure<Employee>("الموظف غير موجود");
 
-                return Result.Success(employee);
+                return Result.Ok(employee);
             }
             catch (Exception ex)
             {
@@ -131,8 +133,8 @@ namespace AlSa3d.Services.Implementations
                 employee.IsDeleted = true;
                 employee.DeletedAt = DateTime.Now;
 
-                var result = await _employeeRepository.UpdateAsync(employee);
-                return result;
+                var updateResult = await _employeeRepository.UpdateAsync(employee);
+                return Result.Ok(updateResult.Success);
             }
             catch (Exception ex)
             {
@@ -165,7 +167,7 @@ namespace AlSa3d.Services.Implementations
         {
             try
             {
-                var employee = await _employeeRepository.GetByIdAsync(e => e.Id == employeeId && !e.IsDeleted);
+                var employee = await _employeeRepository.GetAsync(e => e.Id == employeeId && !e.IsDeleted);
                 if (employee == null)
                     return Result.Failure<Salary>("الموظف غير موجود");
 
@@ -185,7 +187,7 @@ namespace AlSa3d.Services.Implementations
                     AbsenceDays = 0,
                     Bonus = 0,
                     Notes = $"راتب شهر {month}/{year}",
-                    Status = SalaryStatus.Pending,
+                    Status = "Pending",
                     CreatedAt = DateTime.Now
                 };
 
@@ -209,7 +211,7 @@ namespace AlSa3d.Services.Implementations
                 {
                     EmployeeId = employeeId,
                     Date = date.Date,
-                    Type = type,
+                    Type = type.ToString(),
                     Time = DateTime.Now,
                     Notes = type == AttendanceType.CheckIn ? "تسجيل دخول" : "تسجيل خروج"
                 };
@@ -235,7 +237,7 @@ namespace AlSa3d.Services.Implementations
                 if (toDate.HasValue)
                     attendances = attendances.Where(a => a.Date <= toDate.Value.Date);
 
-                return Result.Success(attendances.OrderByDescending(a => a.Date));
+                return Result.Ok(attendances.OrderByDescending(a => a.Date).AsEnumerable());
             }
             catch (Exception ex)
             {

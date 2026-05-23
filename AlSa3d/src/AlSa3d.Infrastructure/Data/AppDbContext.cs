@@ -16,12 +16,16 @@ public class AppDbContext : DbContext
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<InvoiceItem> InvoiceItems { get; set; }
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<Return> Returns { get; set; }
+    public DbSet<ReturnItem> ReturnItems { get; set; }
 
     // Products
     public DbSet<Product> Products { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Warehouse> Warehouses { get; set; }
     public DbSet<ProductWarehouse> ProductWarehouses { get; set; }
+    public DbSet<WarehouseProduct> WarehouseProducts { get; set; }
+    public DbSet<PricingRule> PricingRules { get; set; }
 
     // Employees
     public DbSet<Employee> Employees { get; set; }
@@ -37,9 +41,11 @@ public class AppDbContext : DbContext
 
     // Financial
     public DbSet<Bank> Banks { get; set; }
-    public DbSet<BankAccount> BankAccounts { get; set; }
+    public DbSet<Account> Accounts { get; set; }
     public DbSet<Check> Checks { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
+    public DbSet<Currency> Currencies { get; set; }
+    public DbSet<ExchangeRate> ExchangeRates { get; set; }
 
     // System
     public DbSet<Setting> Settings { get; set; }
@@ -48,8 +54,6 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // Apply all configurations from the assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }

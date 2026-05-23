@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 using AlSa3d.Core.Entities;
 using AlSa3d.Core.Interfaces;
 using AlSa3d.Core.DTOs;
-using AlSa3d.Core.Enums;
+using AlSa3d.Core;
+using AlSa3d.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace AlSa3d.Services.Implementations
@@ -44,11 +45,39 @@ namespace AlSa3d.Services.Implementations
                     i => i.Items,
                     i => i.CreatedBy);
                 
-                return Result.Success(invoices.OrderByDescending(i => i.CreatedAt));
+                return Result.Ok(invoices.OrderByDescending(i => i.CreatedAt).AsEnumerable());
             }
             catch (Exception ex)
             {
                 return Result.Failure<IEnumerable<Invoice>>($"فشل في جلب الفواتير: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<IEnumerable<InvoiceDto>>> GetRecentInvoicesAsync(int count)
+        {
+            try
+            {
+                var invoices = await _invoiceRepository.GetAllAsync(
+                    i => i.Customer,
+                    i => i.Items);
+                return Result.Ok(invoices.Where(i => !i.IsDeleted)
+                    .OrderByDescending(i => i.CreatedAt)
+                    .Take(count)
+                    .Select(i => new InvoiceDto
+                    {
+                        Id = i.Id,
+                        InvoiceNumber = i.InvoiceNumber,
+                        CustomerName = i.Customer?.Name,
+                        Date = i.Date,
+                        TotalAmount = i.Total,
+                        PaidAmount = i.PaidAmount,
+                        RemainingAmount = i.Remaining,
+                        StatusName = i.Status.ToString()
+                    }).AsEnumerable());
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<IEnumerable<InvoiceDto>>($"فشل في جلب آخر الفواتير: {ex.Message}");
             }
         }
 
@@ -64,7 +93,7 @@ namespace AlSa3d.Services.Implementations
                 if (invoice == null)
                     return Result.Failure<Invoice>("الفاتورة غير موجودة");
 
-                return Result.Success(invoice);
+                return Result.Ok(invoice);
             }
             catch (Exception ex)
             {
@@ -84,8 +113,8 @@ namespace AlSa3d.Services.Implementations
                 // إنشاء الفاتورة
                 var invoice = new Invoice
                 {
-                    InvoiceNumber = await GenerateInvoiceNumberAsync(dto.Type),
-                    Type = dto.Type,
+                    InvoiceNumber = await GenerateInvoiceNumberAsync(Enum.Parse<InvoiceType>(dto.Type)),
+                    Type = Enum.Parse<InvoiceType>(dto.Type),
                     CustomerId = dto.CustomerId,
                     Date = dto.Date ?? DateTime.Now,
                     DueDate = dto.DueDate,
@@ -109,7 +138,7 @@ namespace AlSa3d.Services.Implementations
                         return Result.Failure<Invoice>($"المنتج {itemDto.ProductId} غير موجود");
 
                     // التحقق من المخزون
-                    if (dto.Type == InvoiceType.Sales)
+                    if (dto.Type == "Sales")
                     {
                         var stock = await GetProductStockAsync(itemDto.ProductId, itemDto.WarehouseId ?? 1);
                         if (stock < itemDto.Quantity)
@@ -146,7 +175,7 @@ namespace AlSa3d.Services.Implementations
                     return Result.Failure<Invoice>(result.Message);
 
                 // تحديث المخزون
-                if (dto.Type == InvoiceType.Sales)
+                if (dto.Type == "Sales")
                 {
                     foreach (var itemDto in dto.Items)
                     {
@@ -160,7 +189,7 @@ namespace AlSa3d.Services.Implementations
                     }
                 }
 
-                return Result.Success(invoice);
+                return Result.Ok(invoice);
             }
             catch (Exception ex)
             {
@@ -250,8 +279,8 @@ namespace AlSa3d.Services.Implementations
                 invoice.IsDeleted = true;
                 invoice.DeletedAt = DateTime.Now;
 
-                var result = await _invoiceRepository.UpdateAsync(invoice);
-                return result;
+                var updateResult = await _invoiceRepository.UpdateAsync(invoice);
+                return Result.Ok(updateResult.Success);
             }
             catch (Exception ex)
             {
@@ -377,7 +406,7 @@ namespace AlSa3d.Services.Implementations
                     .Where(i => i.Status != InvoiceStatus.Paid && i.Status != InvoiceStatus.Cancelled)
                     .Sum(i => i.Total);
 
-                return Result.Success(totalUnpaid);
+                return Result.Ok(totalUnpaid);
             }
             catch (Exception ex)
             {
@@ -410,7 +439,7 @@ namespace AlSa3d.Services.Implementations
                 if (toDate.HasValue)
                     filtered = filtered.Where(i => i.Date <= toDate.Value);
 
-                return Result.Success(filtered.OrderByDescending(i => i.Date));
+                return Result.Ok(filtered.OrderByDescending(i => i.Date).AsEnumerable());
             }
             catch (Exception ex)
             {
@@ -436,7 +465,7 @@ namespace AlSa3d.Services.Implementations
                     MonthlyRevenue = invoices.Where(i => i.Date.Month == DateTime.Now.Month && i.Status == InvoiceStatus.Paid && !i.IsDeleted).Sum(i => i.Total)
                 };
 
-                return Result.Success(stats);
+                return Result.Ok(stats);
             }
             catch (Exception ex)
             {
@@ -459,10 +488,10 @@ namespace AlSa3d.Services.Implementations
             if (product == null) return 0;
 
             var warehouseProduct = product.WarehouseProducts?.FirstOrDefault(wp => wp.WarehouseId == warehouseId);
-            return warehouseProduct?.Quantity ?? 0;
+            return (int)(warehouseProduct?.Quantity ?? 0);
         }
 
-        private async Task<Result<bool>> UpdateProductStockAsync(int productId, int warehouseId, int quantityChange)
+        private async Task<Result<bool>> UpdateProductStockAsync(int productId, int warehouseId, decimal quantityChange)
         {
             var product = await _productRepository.GetByIdAsync(productId, p => p.WarehouseProducts);
             if (product == null)
@@ -472,15 +501,15 @@ namespace AlSa3d.Services.Implementations
             if (warehouseProduct == null)
                 return Result.Failure<bool>("المخزن غير مرتبط بالمنتج");
 
-            warehouseProduct.Quantity += quantityChange;
+            warehouseProduct.Quantity += (int)quantityChange;
             
             if (warehouseProduct.Quantity < 0)
                 return Result.Failure<bool>("الكمية لا يمكن أن تكون سالبة");
 
             warehouseProduct.LastUpdated = DateTime.Now;
 
-            var result = await _productRepository.UpdateAsync(product);
-            return result;
+            var updateResult = await _productRepository.UpdateAsync(product);
+            return Result.Ok(updateResult.Success);
         }
 
         #endregion

@@ -1,3 +1,5 @@
+using AlSa3d.Core;
+using AlSa3d.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +34,7 @@ namespace AlSa3d.Services.Implementations
                     c => c.Addresses,
                     c => c.Contacts);
                 
-                return Result.Success(customers.Where(c => !c.IsDeleted).OrderBy(c => c.Name));
+                return Result.Ok(customers.Where(c => !c.IsDeleted).OrderBy((c => c.Name)).AsEnumerable());
             }
             catch (Exception ex)
             {
@@ -51,7 +53,7 @@ namespace AlSa3d.Services.Implementations
                 if (customer == null || customer.IsDeleted)
                     return Result.Failure<Customer>("العميل غير موجود");
 
-                return Result.Success(customer);
+                return Result.Ok(customer);
             }
             catch (Exception ex)
             {
@@ -127,7 +129,7 @@ namespace AlSa3d.Services.Implementations
 
                 await _customerRepository.UpdateAsync(customer);
 
-                return Result.Success(customer);
+                return Result.Ok(customer);
             }
             catch (Exception ex)
             {
@@ -188,8 +190,8 @@ namespace AlSa3d.Services.Implementations
                 customer.IsDeleted = true;
                 customer.DeletedAt = DateTime.Now;
 
-                var result = await _customerRepository.UpdateAsync(customer);
-                return result;
+                var updateResult = await _customerRepository.UpdateAsync(customer);
+                return Result.Ok(updateResult.Success);
             }
             catch (Exception ex)
             {
@@ -288,7 +290,7 @@ namespace AlSa3d.Services.Implementations
                     (c.NationalId != null && c.NationalId.Contains(searchTerm))
                 ));
 
-                return Result.Success(filtered.OrderBy(c => c.Name));
+                return Result.Ok(filtered.OrderBy((c => c.Name)).AsEnumerable());
             }
             catch (Exception ex)
             {
@@ -301,7 +303,7 @@ namespace AlSa3d.Services.Implementations
             try
             {
                 // سيتم تنفيذ هذا في InvoiceService
-                return Result.Success(0m);
+                return Result.Ok(0m);
             }
             catch (Exception ex)
             {
@@ -329,7 +331,7 @@ namespace AlSa3d.Services.Implementations
                     AverageMonthlyPurchases = 0
                 };
 
-                return Result.Success(stats);
+                return Result.Ok(stats);
             }
             catch (Exception ex)
             {
