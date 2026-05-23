@@ -29,12 +29,10 @@ namespace AlSa3d.Desktop.ViewModels
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
-            
-            NavigateTo("Dashboard");
         }
 
         [RelayCommand]
-        private void NavigateTo(string viewName)
+        private void Navigate(string viewName)
         {
             switch (viewName)
             {

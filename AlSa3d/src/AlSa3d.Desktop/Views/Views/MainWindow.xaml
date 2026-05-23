@@ -154,7 +154,7 @@
             <Border Background="{StaticResource SurfaceBrush}" 
                     CornerRadius="10"
                     Margin="0,50,0,0">
-                <ContentControl Content="{Binding CurrentView}"/>
+                <ContentControl x:Name="MainContent" Content="{Binding CurrentView}"/>
             </Border>
         </Grid>
     </Grid>

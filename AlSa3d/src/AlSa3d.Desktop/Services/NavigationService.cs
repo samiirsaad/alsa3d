@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using AlSa3d.Desktop.ViewModels;
 using AlSa3d.Desktop.Views;
 
@@ -56,15 +57,13 @@ public class NavigationService : INavigationService
             throw new InvalidOperationException($"لم يتم العثور على View لـ {typeof(TViewModel).Name}");
         }
 
-        // حفظ التاريخ
         if (_contentArea?.Content != null)
         {
             var currentType = _contentArea.Content.GetType();
             _navigationHistory.Push(currentType);
         }
 
-        // إنشاء العرض الجديد
-        var newView = (UserControl)Activator.CreateInstance(viewType)!;
+        var newView = CreateViewWithViewModel(viewType, typeof(TViewModel));
         
         if (_contentArea != null)
         {
@@ -99,11 +98,19 @@ public class NavigationService : INavigationService
             return;
         }
 
-        var newView = (UserControl)Activator.CreateInstance(viewType)!;
+        var newView = CreateViewWithViewModel(viewType, viewModelType);
         
         if (_contentArea != null)
         {
             _contentArea.Content = newView;
         }
+    }
+
+    private UserControl CreateViewWithViewModel(Type viewType, Type viewModelType)
+    {
+        var viewModel = App.ServiceProvider.GetService(viewModelType);
+        var newView = (UserControl)Activator.CreateInstance(viewType)!;
+        newView.DataContext = viewModel;
+        return newView;
     }
 }

@@ -19,6 +19,8 @@ namespace AlSa3d.Desktop.Views
             {
                 navService.SetMainWindow(this);
             }
+
+            _viewModel.NavigateCommand.Execute("Dashboard");
         }
     }
 }
