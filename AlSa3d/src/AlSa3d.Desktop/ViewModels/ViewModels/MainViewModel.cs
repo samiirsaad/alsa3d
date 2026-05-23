@@ -1,5 +1,5 @@
 using System;
-using System.Collections.ObjectModel;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,15 +25,20 @@ namespace AlSa3d.Desktop.ViewModels
         [ObservableProperty]
         private object? _currentView;
 
+        public ICommand NavigateCommand { get; }
+        public ICommand LogoutCommand { get; }
+
         public MainViewModel(INavigationService navigationService, IDialogService dialogService)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
+            NavigateCommand = new RelayCommand<string>(Navigate);
+            LogoutCommand = new RelayCommand(Logout);
         }
 
-        [RelayCommand]
-        private void Navigate(string viewName)
+        private void Navigate(string? viewName)
         {
+            if (viewName == null) return;
             switch (viewName)
             {
                 case "Dashboard": _navigationService.NavigateTo<DashboardViewModel>(); break;
@@ -47,7 +52,6 @@ namespace AlSa3d.Desktop.ViewModels
             }
         }
 
-        [RelayCommand]
         private void Logout()
         {
             if (_dialogService.ShowConfirm("هل تريد تسجيل الخروج؟", "تأكيد"))
