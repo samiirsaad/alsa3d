@@ -2,6 +2,7 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AlSa3d.Services.Interfaces;
+using AlSa3d.Desktop.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,6 +24,8 @@ public class ProductDisplayModel
 public partial class ProductViewModel : ObservableObject
 {
     private readonly IProductService _productService;
+    private readonly IDialogService _dialogService;
+    private readonly INotificationService _notificationService;
 
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -30,9 +33,11 @@ public partial class ProductViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<ProductDisplayModel> _products = new();
 
-    public ProductViewModel(IProductService productService)
+    public ProductViewModel(IProductService productService, IDialogService dialogService, INotificationService notificationService)
     {
         _productService = productService;
+        _dialogService = dialogService;
+        _notificationService = notificationService;
         LoadProductsCommand.Execute(null);
     }
 
@@ -66,12 +71,17 @@ public partial class ProductViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task AddNewProduct() => await Task.CompletedTask;
+    private async Task AddNewProduct()
+    {
+        _notificationService.ShowInfo("إضافة منتج جديد - قيد التطوير");
+        await Task.CompletedTask;
+    }
 
     [RelayCommand]
     private async Task EditProduct(ProductDisplayModel? product)
     {
         if (product == null) return;
+        _notificationService.ShowInfo("تعديل المنتج - قيد التطوير");
         await Task.CompletedTask;
     }
 
@@ -79,11 +89,22 @@ public partial class ProductViewModel : ObservableObject
     private async Task DeleteProduct(ProductDisplayModel? product)
     {
         if (product == null) return;
+        if (!_dialogService.ShowConfirm($"هل أنت متأكد من حذف المنتج '{product.Name}'؟"))
+            return;
         var result = await _productService.DeleteProductAsync(product.Id);
         if (result.Success)
+        {
+            _notificationService.ShowSuccess("تم حذف المنتج بنجاح");
             await LoadProductsCommand.ExecuteAsync(null);
+        }
+        else
+            _dialogService.ShowMessage(result.Message ?? "فشل حذف المنتج", "خطأ");
     }
 
     [RelayCommand]
-    private async Task StockTake() => await Task.CompletedTask;
+    private async Task StockTake()
+    {
+        _notificationService.ShowInfo("جرد المخزون - قيد التطوير");
+        await Task.CompletedTask;
+    }
 }

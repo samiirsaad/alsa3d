@@ -260,7 +260,7 @@ namespace AlSa3d.Services.Implementations
         {
             try
             {
-                var invoice = await _invoiceRepository.GetByIdAsync(id);
+                var invoice = await _invoiceRepository.GetByIdAsync(id, i => i.Items);
                 if (invoice == null)
                     return Result.Failure<bool>("الفاتورة غير موجودة");
 
@@ -312,7 +312,7 @@ namespace AlSa3d.Services.Implementations
         {
             try
             {
-                var invoice = await _invoiceRepository.GetByIdAsync(id);
+                var invoice = await _invoiceRepository.GetByIdAsync(id, i => i.Items);
                 if (invoice == null)
                     return Result.Failure<Invoice>("الفاتورة غير موجودة");
 
@@ -501,7 +501,7 @@ namespace AlSa3d.Services.Implementations
             if (warehouseProduct == null)
                 return Result.Failure<bool>("المخزن غير مرتبط بالمنتج");
 
-            warehouseProduct.Quantity += (int)quantityChange;
+            warehouseProduct.Quantity += quantityChange;
             
             if (warehouseProduct.Quantity < 0)
                 return Result.Failure<bool>("الكمية لا يمكن أن تكون سالبة");

@@ -27,6 +27,7 @@ public class Invoice : BaseEntity
     public DateTime? DeletedAt { get; set; }
 
     public virtual Customer? Customer { get; set; }
+    public new virtual User? CreatedBy { get; set; }
     public virtual ICollection<InvoiceItem> Items { get; set; } = new List<InvoiceItem>();
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }
@@ -69,6 +70,7 @@ public class Return : BaseEntity
     public int? CreatedByUserId { get; set; }
 
     public virtual Invoice? Invoice { get; set; }
+    public new virtual User? CreatedBy { get; set; }
     public virtual ICollection<ReturnItem> Items { get; set; } = new List<ReturnItem>();
 }
 

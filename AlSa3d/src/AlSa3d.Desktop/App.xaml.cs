@@ -20,8 +20,9 @@ namespace AlSa3d.Desktop;
     public partial class App : Application
 {
     private readonly IHost _host;
+    private static IServiceScope? _appScope;
 
-    public static IServiceProvider ServiceProvider => Current is App app ? app._host.Services : null!;
+    public static IServiceProvider ServiceProvider => _appScope?.ServiceProvider!;
 
     public App()
     {
@@ -77,6 +78,7 @@ namespace AlSa3d.Desktop;
     protected override async void OnStartup(StartupEventArgs e)
     {
         await _host.StartAsync();
+        _appScope = _host.Services.CreateScope();
 
         using (var scope = _host.Services.CreateScope())
         {
@@ -92,6 +94,7 @@ namespace AlSa3d.Desktop;
 
     protected override async void OnExit(ExitEventArgs e)
     {
+        _appScope?.Dispose();
         await _host.StopAsync();
         _host.Dispose();
 

@@ -6,6 +6,50 @@
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1200"
              Background="#F5F6FA">
+    <UserControl.Resources>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2E86DE"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1B5F9E"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#D1D8E0"/>
+            <Setter Property="Foreground" Value="#2C3A47"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#B8BFC9"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -26,16 +70,40 @@
                 </StackPanel>
                 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Content="➕ موظف جديد" Background="#2E86DE" Foreground="White" Padding="15,8" BorderThickness="0" Cursor="Hand" Margin="0,0,10,0"/>
-                    <Button Content="💰 صرف الرواتب" Background="#26DE81" Foreground="White" Padding="15,8" BorderThickness="0" Cursor="Hand"/>
+                    <Button Content="➕ موظف جديد" Style="{StaticResource PrimaryButton}" 
+                            Command="{Binding AddNewEmployeeCommand}" Margin="0,0,10,0"/>
+                    <Button Content="💰 صرف الرواتب" Style="{StaticResource SecondaryButton}" 
+                            Command="{Binding PaySalariesCommand}"/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Employees Grid -->
         <Border Grid.Row="1" Background="White" CornerRadius="10" Padding="20">
-            <DataGrid AutoGenerateColumns="False" Background="Transparent" 
+            <DataGrid ItemsSource="{Binding Employees}" AutoGenerateColumns="False" 
+                      CanUserAddRows="False" IsReadOnly="True"
+                      Background="Transparent" 
                       BorderBrush="#D1D8E0" FontFamily="Cairo" RowHeight="50">
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#F1F2F6"/>
+                        <Setter Property="Foreground" Value="#2C3A47"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Padding" Value="10"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="Padding" Value="10"/>
+                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#E3F2FD"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.CellStyle>
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="م" Binding="{Binding Id}" Width="50"/>
                     <DataGridTextColumn Header="اسم الموظف" Binding="{Binding Name}" Width="*"/>
@@ -47,10 +115,13 @@
                     <DataGridTemplateColumn Header="الإجراءات" Width="150">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Content="✏️" Margin="0,0,5,0" Padding="8,4"/>
-                                    <Button Content="📊" Margin="0,0,5,0" Padding="8,4"/>
-                                    <Button Content="🗑️" Padding="8,4"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Content="✏️" Style="{StaticResource SecondaryButton}" Padding="8,4" Margin="0,0,5,0"
+                                            Command="{Binding DataContext.EditEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                            CommandParameter="{Binding}"/>
+                                    <Button Content="🗑️" Style="{StaticResource SecondaryButton}" Padding="8,4"
+                                            Command="{Binding DataContext.DeleteEmployeeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                            CommandParameter="{Binding}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>

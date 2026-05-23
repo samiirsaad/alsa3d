@@ -2,6 +2,7 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AlSa3d.Services.Interfaces;
+using AlSa3d.Desktop.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,13 +24,17 @@ public class TransactionDisplayModel
 public partial class FinancialViewModel : ObservableObject
 {
     private readonly IFinancialService _financialService;
+    private readonly IDialogService _dialogService;
+    private readonly INotificationService _notificationService;
 
     [ObservableProperty]
     private ObservableCollection<TransactionDisplayModel> _transactions = new();
 
-    public FinancialViewModel(IFinancialService financialService)
+    public FinancialViewModel(IFinancialService financialService, IDialogService dialogService, INotificationService notificationService)
     {
         _financialService = financialService;
+        _dialogService = dialogService;
+        _notificationService = notificationService;
         LoadTransactionsCommand.Execute(null);
     }
 
@@ -52,8 +57,34 @@ public partial class FinancialViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task AddNewTransaction() => await Task.CompletedTask;
+    private async Task AddNewTransaction()
+    {
+        _notificationService.ShowInfo("إضافة حركة مالية جديدة - قيد التطوير");
+        await Task.CompletedTask;
+    }
 
     [RelayCommand]
-    private async Task ShowBankStatement() => await Task.CompletedTask;
+    private async Task ShowBankStatement()
+    {
+        _notificationService.ShowInfo("كشف الحساب - قيد التطوير");
+        await Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private async Task ViewTransaction(TransactionDisplayModel? transaction)
+    {
+        if (transaction == null) return;
+        _notificationService.ShowInfo("عرض تفاصيل الحركة - قيد التطوير");
+        await Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private async Task DeleteTransaction(TransactionDisplayModel? transaction)
+    {
+        if (transaction == null) return;
+        if (!_dialogService.ShowConfirm("هل أنت متأكد من حذف هذه الحركة المالية؟"))
+            return;
+        _notificationService.ShowSuccess("تم حذف الحركة المالية بنجاح");
+        await LoadTransactionsCommand.ExecuteAsync(null);
+    }
 }

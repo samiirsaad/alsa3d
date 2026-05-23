@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AlSa3d.Core.Entities;
 using AlSa3d.Core.Interfaces;
 using AlSa3d.Core.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace AlSa3d.Services.Implementations
 {
@@ -15,15 +16,18 @@ namespace AlSa3d.Services.Implementations
         private readonly IRepository<Customer> _customerRepository;
         private readonly IRepository<Address> _addressRepository;
         private readonly IRepository<Contact> _contactRepository;
+        private readonly IRepository<Invoice> _invoiceRepository;
 
         public CustomerService(
             IRepository<Customer> customerRepository,
             IRepository<Address> addressRepository,
-            IRepository<Contact> contactRepository)
+            IRepository<Contact> contactRepository,
+            IRepository<Invoice> invoiceRepository)
         {
             _customerRepository = customerRepository;
             _addressRepository = addressRepository;
             _contactRepository = contactRepository;
+            _invoiceRepository = invoiceRepository;
         }
 
         public async Task<Result<IEnumerable<Customer>>> GetAllCustomersAsync()
@@ -302,8 +306,15 @@ namespace AlSa3d.Services.Implementations
         {
             try
             {
-                // سيتم تنفيذ هذا في InvoiceService
-                return Result.Ok(0m);
+                var invoices = await _invoiceRepository.GetAllAsync(i => i.Payments);
+                var customerInvoices = invoices.Where(i => i.CustomerId == customerId && !i.IsDeleted);
+
+                var totalDue = customerInvoices.Sum(i => i.Total);
+                var totalPaid = customerInvoices.SelectMany(i => i.Payments)
+                    .Where(p => !p.IsDeleted)
+                    .Sum(p => p.Amount);
+
+                return Result.Ok(totalDue - totalPaid);
             }
             catch (Exception ex)
             {
@@ -319,16 +330,25 @@ namespace AlSa3d.Services.Implementations
                 if (customer == null || customer.IsDeleted)
                     return Result.Failure<CustomerStatisticsDto>("العميل غير موجود");
 
+                var invoices = await _invoiceRepository.GetAllAsync(i => i.Items);
+                var customerInvoices = invoices.Where(i => i.CustomerId == customerId && !i.IsDeleted).ToList();
+
+                var lastInvoice = customerInvoices.OrderByDescending(i => i.Date).FirstOrDefault();
+
                 var stats = new CustomerStatisticsDto
                 {
                     CustomerId = customerId,
                     CustomerName = customer.Name,
-                    TotalInvoices = 0, // سيتم حسابه من InvoiceService
-                    TotalPurchases = 0,
-                    TotalReturns = 0,
-                    CurrentBalance = 0,
-                    LastPurchaseDate = null,
-                    AverageMonthlyPurchases = 0
+                    TotalInvoices = customerInvoices.Count,
+                    TotalPurchases = customerInvoices.Sum(i => i.Total),
+                    TotalReturns = customerInvoices.Count(i => i.Status == InvoiceStatus.Cancelled),
+                    CurrentBalance = customerInvoices.Sum(i => i.Total) -
+                                     customerInvoices.Sum(i => i.PaidAmount),
+                    LastPurchaseDate = lastInvoice?.Date,
+                    AverageMonthlyPurchases = customerInvoices.Any()
+                        ? customerInvoices.Sum(i => i.Total) /
+                          Math.Max(1, (DateTime.Now - customerInvoices.Min(i => i.Date)).Days / 30.0m)
+                        : 0
                 };
 
                 return Result.Ok(stats);

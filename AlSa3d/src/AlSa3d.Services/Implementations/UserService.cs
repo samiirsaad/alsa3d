@@ -4,12 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
-using System.Text;
 using AlSa3d.Core.Entities;
 using AlSa3d.Core.Interfaces;
 using AlSa3d.Core.DTOs;
 using Microsoft.Extensions.Logging;
+using BCrypt.Net;
 
 namespace AlSa3d.Services.Implementations
 {
@@ -61,7 +60,7 @@ namespace AlSa3d.Services.Implementations
                 }
 
                 var user = await _userRepository.GetAsync(u => u.Username == username && !u.IsDeleted);
-                
+
                 if (user == null)
                 {
                     _logger.LogWarning("⚠️ محاولة تسجيل دخول باسم مستخدم غير موجود: {username}", username);
@@ -87,7 +86,7 @@ namespace AlSa3d.Services.Implementations
 
                 // تسجيل العملية
                 await LogAuditAsync(user.Id, "Login", $"تسجيل دخول ناجح من {username}");
-                
+
                 _logger.LogInformation("✅ تسجيل دخول ناجح: {username}", username);
                 return Result.Ok(user);
             }
@@ -137,7 +136,7 @@ namespace AlSa3d.Services.Implementations
                 };
 
                 var result = await _userRepository.AddAsync(user);
-                
+
                 if (result.Success)
                 {
                     await LogAuditAsync(user.Id, "Register", $"تسجيل مستخدم جديد: {dto.Username}");
@@ -186,7 +185,7 @@ namespace AlSa3d.Services.Implementations
                 user.UpdatedAt = DateTime.Now;
 
                 var updateResult = await _userRepository.UpdateAsync(user);
-                
+
                 if (updateResult.Success)
                 {
                     await LogAuditAsync(userId, "ChangePassword", "تغيير كلمة المرور");
@@ -267,7 +266,7 @@ namespace AlSa3d.Services.Implementations
                 user.UpdatedAt = DateTime.Now;
 
                 var result = await _userRepository.UpdateAsync(user);
-                
+
                 if (result.Success)
                 {
                     await LogAuditAsync(id, "UpdateUser", $"تحديث بيانات المستخدم: {user.Username}");
@@ -302,7 +301,7 @@ namespace AlSa3d.Services.Implementations
                 user.DeletedAt = DateTime.Now;
 
                 var updateResult = await _userRepository.UpdateAsync(user);
-                
+
                 if (updateResult.Success)
                 {
                     await LogAuditAsync(id, "DeleteUser", $"حذف المستخدم: {user.Username}");
@@ -386,7 +385,7 @@ namespace AlSa3d.Services.Implementations
                     return Result.Failure<bool>("الدور غير موجود");
 
                 role.Permissions.Clear();
-                
+
                 foreach (var permissionId in permissionIds)
                 {
                     var permission = await _permissionRepository.GetByIdAsync(permissionId);
@@ -424,7 +423,7 @@ namespace AlSa3d.Services.Implementations
                 if (user == null || user.IsDeleted || user.Role == null)
                     return Result.Ok(false);
 
-                var hasPermission = user.Role.Permissions != null && 
+                var hasPermission = user.Role.Permissions != null &&
                     user.Role.Permissions.Any(p => p.Name == permissionName && !p.IsDeleted);
 
                 return Result.Ok(hasPermission);
@@ -440,30 +439,19 @@ namespace AlSa3d.Services.Implementations
         #region Helper Methods
 
         /// <summary>
-        /// تشفير كلمة المرور باستخدام SHA256
+        /// تشفير كلمة المرور باستخدام BCrypt
         /// </summary>
-        /// <param name="password">كلمة المرور الخام</param>
-        /// <returns>كلمة المرور المشفرة</returns>
         private string HashPassword(string password)
         {
-            using (var sha256 = SHA256.Create())
-            {
-                var bytes = Encoding.UTF8.GetBytes(password);
-                var hashBytes = sha256.ComputeHash(bytes);
-                return Convert.ToBase64String(hashBytes);
-            }
+            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
         }
 
         /// <summary>
         /// التحقق من صحة كلمة المرور
         /// </summary>
-        /// <param name="password">كلمة المرور الخام</param>
-        /// <param name="storedHash">كلمة المرور المشفرة المخزنة</param>
-        /// <returns>هل كلمة المرور صحيحة</returns>
         private bool VerifyPassword(string password, string storedHash)
         {
-            var hash = HashPassword(password);
-            return hash == storedHash;
+            return BCrypt.Net.BCrypt.Verify(password, storedHash);
         }
 
         /// <summary>

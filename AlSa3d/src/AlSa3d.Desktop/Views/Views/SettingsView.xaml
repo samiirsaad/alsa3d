@@ -6,6 +6,50 @@
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1200"
              Background="#F5F6FA">
+    <UserControl.Resources>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2E86DE"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1B5F9E"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SuccessButton" TargetType="Button">
+            <Setter Property="Background" Value="#26DE81"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1DBF6E"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -26,34 +70,37 @@
                 <TabItem Header="⚙️ الإعدادات العامة">
                     <StackPanel Margin="20">
                         <TextBlock Text="اسم الشركة" FontSize="14" Margin="0,0,0,5" FontFamily="Cairo"/>
-                        <TextBox Padding="10" Margin="0,0,0,15" BorderBrush="#D1D8E0"/>
+                        <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Padding="10" Margin="0,0,0,15" BorderBrush="#D1D8E0"/>
                         
                         <TextBlock Text="العملة الافتراضية" FontSize="14" Margin="0,0,0,5" FontFamily="Cairo"/>
-                        <ComboBox Padding="10" Margin="0,0,0,15" Width="200" HorizontalAlignment="Left">
-                            <ComboBoxItem Content="جنيه مصري (EGP)"/>
-                            <ComboBoxItem Content="ريال سعودي (SAR)"/>
-                            <ComboBoxItem Content="دولار أمريكي (USD)"/>
+                        <ComboBox SelectedValue="{Binding DefaultCurrency, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Content" Padding="10" Margin="0,0,0,15" Width="200" HorizontalAlignment="Left">
+                            <ComboBoxItem Content="EGP"/>
+                            <ComboBoxItem Content="SAR"/>
+                            <ComboBoxItem Content="USD"/>
                         </ComboBox>
                         
                         <TextBlock Text="رقم الهاتف" FontSize="14" Margin="0,0,0,5" FontFamily="Cairo"/>
-                        <TextBox Padding="10" Margin="0,0,0,15" BorderBrush="#D1D8E0"/>
+                        <TextBox Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Padding="10" Margin="0,0,0,15" BorderBrush="#D1D8E0"/>
                         
-                        <Button Content="💾 حفظ الإعدادات" Background="#2E86DE" Foreground="White" Padding="15,8" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left" Width="200"/>
+                        <Button Content="💾 حفظ الإعدادات" Style="{StaticResource PrimaryButton}" 
+                                Command="{Binding SaveSettingsCommand}" HorizontalAlignment="Left" Width="200"/>
                     </StackPanel>
                 </TabItem>
                 
                 <TabItem Header="👥 إدارة المستخدمين">
                     <StackPanel Margin="20">
                         <TextBlock Text="صلاحيات المستخدمين والأدوار" FontSize="14" Margin="0,0,0,15" FontFamily="Cairo"/>
-                        <Button Content="➕ إضافة مستخدم" Background="#2E86DE" Foreground="White" Padding="15,8" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left" Width="200"/>
+                        <Button Content="➕ إضافة مستخدم" Style="{StaticResource PrimaryButton}" 
+                                Command="{Binding AddUserCommand}" HorizontalAlignment="Left" Width="200"/>
                     </StackPanel>
                 </TabItem>
                 
                 <TabItem Header="🔒 النسخ الاحتياطي">
                     <StackPanel Margin="20">
                         <TextBlock Text="إعدادات النسخ الاحتياطي التلقائي" FontSize="14" Margin="0,0,0,15" FontFamily="Cairo"/>
-                        <CheckBox Content="تفعيل النسخ الاحتياطي اليومي" Margin="0,0,0,15" FontFamily="Cairo"/>
-                        <Button Content="📦 نسخ احتياطي الآن" Background="#26DE81" Foreground="White" Padding="15,8" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left" Width="200"/>
+                        <CheckBox Content="تفعيل النسخ الاحتياطي اليومي" IsChecked="{Binding AutoBackupEnabled}" Margin="0,0,0,15" FontFamily="Cairo"/>
+                        <Button Content="📦 نسخ احتياطي الآن" Style="{StaticResource SuccessButton}" 
+                                Command="{Binding CreateBackupCommand}" HorizontalAlignment="Left" Width="200"/>
                     </StackPanel>
                 </TabItem>
             </TabControl>

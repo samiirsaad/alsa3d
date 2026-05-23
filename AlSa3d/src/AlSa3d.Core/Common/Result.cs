@@ -51,19 +51,19 @@ public class Result
     /// <summary>
     /// إرجاع نتيجة فشل مع استثناء
     /// </summary>
-    public static Result Failure(string message, Exception ex) => new() 
-    { 
-        Success = false, 
-        Message = message, 
-        Exception = ex 
+    public static Result Failure(string message, Exception ex) => new()
+    {
+        Success = false,
+        Message = message,
+        Exception = ex
     };
 
     /// <summary>
     /// إرجاع نتيجة فشل مع أخطاء متعددة
     /// </summary>
-    public static Result Failure(params string[] errors) => new() 
-    { 
-        Success = false, 
+    public static Result Failure(params string[] errors) => new()
+    {
+        Success = false,
         Message = "فشلت العملية",
         Errors = new List<string>(errors)
     };
@@ -81,11 +81,11 @@ public class Result
     /// <summary>
     /// إرجاع نتيجة فشل مع استثناء وبيانات
     /// </summary>
-    public static Result<T> Failure<T>(string message, Exception ex) => new() 
-    { 
-        Success = false, 
-        Message = message, 
-        Exception = ex 
+    public static Result<T> Failure<T>(string message, Exception ex) => new()
+    {
+        Success = false,
+        Message = message,
+        Exception = ex
     };
 }
 
@@ -143,22 +143,22 @@ public class Result<T>
     /// <summary>
     /// إرجاع نتيجة فشل مع استثناء
     /// </summary>
-    public static Result<T> Failure(string message, Exception ex) => new() 
-    { 
-        Success = false, 
-        Message = message, 
+    public static Result<T> Failure(string message, Exception ex) => new()
+    {
+        Success = false,
+        Message = message,
         Exception = ex,
-        Data = default 
+        Data = default
     };
 
     /// <summary>
     /// إرجاع نتيجة فشل مع أخطاء متعددة
     /// </summary>
-    public static Result<T> Failure(params string[] errors) => new() 
-    { 
-        Success = false, 
+    public static Result<T> Failure(params string[] errors) => new()
+    {
+        Success = false,
         Message = "فشلت العملية",
         Errors = new List<string>(errors),
-        Data = default 
+        Data = default
     };
 }

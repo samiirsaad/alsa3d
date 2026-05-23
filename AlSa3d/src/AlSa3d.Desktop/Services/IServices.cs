@@ -1,15 +1,13 @@
 using System.Windows;
+using System.Windows.Controls;
 
 namespace AlSa3d.Desktop.Services;
 
-/// <summary>
-/// خدمة التنقل بين الشاشات
-/// </summary>
 public interface INavigationService
 {
-    void NavigateTo<TViewModel>() where TViewModel : class;
-    void GoBack();
-    void GoHome();
+    UserControl CreateView<TViewModel>() where TViewModel : class;
+    UserControl? GoBack();
+    UserControl GoHome();
 }
 
 /// <summary>

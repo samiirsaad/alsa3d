@@ -1,4 +1,5 @@
 using System;
+using System.Windows.Controls;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -39,28 +40,31 @@ namespace AlSa3d.Desktop.ViewModels
         private void Navigate(string? viewName)
         {
             if (viewName == null) return;
-            switch (viewName)
+            UserControl? view = viewName switch
             {
-                case "Dashboard": _navigationService.NavigateTo<DashboardViewModel>(); break;
-                case "Customers": _navigationService.NavigateTo<CustomerViewModel>(); break;
-                case "Invoices": _navigationService.NavigateTo<InvoiceViewModel>(); break;
-                case "Products": _navigationService.NavigateTo<ProductViewModel>(); break;
-                case "Employees": _navigationService.NavigateTo<EmployeeViewModel>(); break;
-                case "Financial": _navigationService.NavigateTo<FinancialViewModel>(); break;
-                case "Reports": _navigationService.NavigateTo<ReportsViewModel>(); break;
-                case "Settings": _navigationService.NavigateTo<SettingsViewModel>(); break;
-            }
+                "Dashboard" => _navigationService.CreateView<DashboardViewModel>(),
+                "Customers" => _navigationService.CreateView<CustomerViewModel>(),
+                "Invoices" => _navigationService.CreateView<InvoiceViewModel>(),
+                "Products" => _navigationService.CreateView<ProductViewModel>(),
+                "Employees" => _navigationService.CreateView<EmployeeViewModel>(),
+                "Financial" => _navigationService.CreateView<FinancialViewModel>(),
+                "Reports" => _navigationService.CreateView<ReportsViewModel>(),
+                "Settings" => _navigationService.CreateView<SettingsViewModel>(),
+                _ => null
+            };
+            if (view != null) CurrentView = view;
         }
 
         private void Logout()
         {
-            if (_dialogService.ShowConfirm("هل تريد تسجيل الخروج؟", "تأكيد"))
+            if (!_dialogService.ShowConfirm("هل تريد تسجيل الخروج؟", "تأكيد")) return;
+
+            var loginView = App.ServiceProvider.GetService<LoginView>();
+            if (loginView != null)
             {
-                var loginView = App.ServiceProvider.GetService<LoginView>();
-                if (loginView != null)
-                {
-                    CurrentView = loginView;
-                }
+                var loginVm = App.ServiceProvider.GetService<LoginViewModel>();
+                loginView.DataContext = loginVm;
+                CurrentView = loginView;
             }
         }
     }
