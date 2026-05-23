@@ -9,6 +9,7 @@ using AlSa3d.Core.Interfaces;
 using AlSa3d.Services.Interfaces;
 using AlSa3d.Services.Implementations;
 using AlSa3d.Infrastructure.Data;
+using AlSa3d.Infrastructure.Data.Repositories;
 using AlSa3d.Desktop.ViewModels;
 using AlSa3d.Desktop.Views;
 using AlSa3d.Desktop.Services;
@@ -48,6 +49,9 @@ namespace AlSa3d.Desktop;
                 services.AddScoped<IFinancialService, FinancialService>();
                 services.AddScoped<IProductService, ProductService>();
                 services.AddScoped<IUserService, UserService>();
+
+                services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
+                services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
                 services.AddTransient<LoginViewModel>();
                 services.AddTransient<DashboardViewModel>();
